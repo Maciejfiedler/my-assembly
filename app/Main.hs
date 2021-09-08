@@ -1,4 +1,5 @@
 module Main where
+import Data.Either
 import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Lazy.Char8 as B8
 
@@ -9,12 +10,16 @@ main = do
 
 type Expression = (String, String, String) -- function, 1 argument, 2 argument
 
-getExpression :: B.ByteString -> Expression
-getExpression bs = (func, a, b)
-    where 
-        bsInWords = B8.words bs :: [B.ByteString]
-        (func:a:b:_) = bytestringListToString bsInWords
+getExpression :: B.ByteString -> Either String Expression
+getExpression bs = 
+    let bytestrings = B8.words bs
+        strings = bytestringsToStrings bytestrings
+        in if((length strings) >= 3) then
+            let (func:a:b:_) = strings
+            in Right (func, a, b)
+            else
+                Left "too few arguments"
         
-bytestringListToString :: [B.ByteString] -> [String]
-bytestringListToString [] = []
-bytestringListToString (x:xs) = (B8.unpack x):bytestringListToString xs
+bytestringsToStrings :: [B.ByteString] -> [String]
+bytestringsToStrings [] = []
+bytestringsToStrings (x:xs) = (B8.unpack x):bytestringsToStrings xs
