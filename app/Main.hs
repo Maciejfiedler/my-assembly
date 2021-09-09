@@ -2,24 +2,39 @@ module Main where
 import Data.Either
 import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Lazy.Char8 as B8
+import qualified Data.Map as M
+
+type Arg = B.ByteString
+type Func = B.ByteString
+type Result = B.ByteString 
+type Expr = (Func, Arg, Arg)
 
 main :: IO ()
 main = do
     bsFile <- B.readFile "instruction.brb" :: IO B.ByteString
-    print $ getExpression bsFile
+    let bsLines = B8.lines bsFile
+    let bsInWords = B8.words $ head bsLines -- first line
+    let result = runFunction bsInWords
+    B.putStr result
 
-type Expression = (String, String, String) -- function, 1 argument, 2 argument
+runFunction :: [B.ByteString] -> B.ByteString
+runFunction bs = 
+    where 
+        expr = seekExpr bs
 
-getExpression :: B.ByteString -> Either String Expression
-getExpression bs = 
-    let bytestrings = B8.words bs
-        strings = bytestringsToStrings bytestrings
-        in if((length strings) >= 3) then
-            let (func:a:b:_) = strings
-            in Right (func, a, b)
-            else
-                Left "too few arguments"
-        
-bytestringsToStrings :: [B.ByteString] -> [String]
-bytestringsToStrings [] = []
-bytestringsToStrings (x:xs) = (B8.unpack x):bytestringsToStrings xs
+seekExpr :: [B.ByteString] -> Either String Expr
+seekExpr bs =
+    if length bs >= 3 then
+        Right (func,a,b)
+    else
+        Left "too few arguments"
+    where (func:a:b:_) = bs
+
+exprList :: M.Map B.ByteString  B.ByteString 
+exprList = M.fromList exprInTuple
+
+exprInTuple :: [(B.ByteString, B.ByteString)]
+exprInTuple = map (\(x,y) -> (B8.pack x, B8.pack y)) list
+    where 
+        list = [
+            ("ADD", "add")] :: [(String,String)]
