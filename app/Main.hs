@@ -13,10 +13,13 @@ runInstruction :: String -> String
 runInstruction str =
     let instructionInTrippleTuple = convertStringToTrippleTuple str
     in case instructionInTrippleTuple of
-        Right (x,y,z) -> 
-            let funcMaybe = seekFuncName x
+        Right (xString,yString,zString) -> 
+            let funcMaybe = seekFuncName xString
             in case funcMaybe of
-                Just func -> show $ func y z
+                Just func -> 
+                    let y = read yString :: Int
+                        z = read zString :: Int
+                        in show $ func y z 
                 Nothing -> "failure"
         Left x -> x
 
