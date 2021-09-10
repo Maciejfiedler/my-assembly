@@ -17,8 +17,8 @@ runInstruction str =
             let funcMaybe = seekFuncName xString
             in case funcMaybe of
                 Just func -> 
-                    let y = read yString :: Int
-                        z = read zString :: Int
+                    let y = read yString :: Double
+                        z = read zString :: Double
                         in show $ func y z 
                 Nothing -> "failure"
         Left x -> x
@@ -32,9 +32,13 @@ convertStringToTrippleTuple xs = let ys = words xs in if length ys >= 3 then
                                 else Left "instruction has too few arguments"
 
 -- convert the function from the instruction into a haskell function
-seekFuncName :: Num a => String -> Maybe (a -> a -> a) 
+seekFuncName :: (Fractional a) => String -> Maybe (a -> a -> a) 
 seekFuncName x = M.lookup x funcNameMap
 
 -- list where the instruction function is bound to a haskell function
-funcNameMap :: Num a => M.Map String (a -> a -> a)
-funcNameMap = M.fromList [("ADD", (+))]
+funcNameMap :: (Fractional a) => M.Map String (a -> a -> a)
+funcNameMap = M.fromList [
+    ("ADD", (+)),
+    ("MUL", (*)),
+    ("SUB", (-)),
+    ("DIV", (/))]
