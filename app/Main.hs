@@ -1,24 +1,37 @@
 module Main where
 import Data.Either
+import qualified Data.Map as M
 
 main :: IO ()
 main = do
     instructionFile <- readFile "instruction.brb" :: IO String
-    let instructionLines = lines instructionFile :: [String] 
-    let results = runInstructions instructionLines
+    let instructionLines = lines instructionFile :: [String]
+    let results = map runInstruction instructionLines
     print results
 
-runInstructions :: [String] -> [String]
-runInstructions [] = []
-runInstructions (x:xs) = (runInstruction x):(runInstructions xs)
-
 runInstruction :: String -> String
-runInstruction str = str
-    where
-        instructionInTrippleTuple = convertStringToTrippleTuple str -- TODO: handle either case
+runInstruction str =
+    let instructionInTrippleTuple = convertStringToTrippleTuple str
+    in case instructionInTrippleTuple of
+        Right (x,y,z) -> 
+            let funcMaybe = seekFuncName x
+            in case funcMaybe of
+                Just func -> show $ func y z
+                Nothing -> "failure"
+        Left x -> x
+
+        -- TODO: handle either case
 
 -- turn the string into a tuple where tuple = (function, arg1, arg2)
 convertStringToTrippleTuple :: String -> Either String (String, String, String)
 convertStringToTrippleTuple xs = let ys = words xs in if length ys >= 3 then
                                 let (x:y:z:_) = ys in Right (x,y,z)
                                 else Left "instruction has too few arguments"
+
+-- convert the function from the instruction into a haskell function
+seekFuncName :: Num a => String -> Maybe (a -> a -> a) 
+seekFuncName x = M.lookup x funcNameMap
+
+-- list where the instruction function is bound to a haskell function
+funcNameMap :: Num a => M.Map String (a -> a -> a)
+funcNameMap = M.fromList [("ADD", (+))]
